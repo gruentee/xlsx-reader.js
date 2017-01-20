@@ -34,15 +34,23 @@
     // for Closure Compiler 'advanced' mode.
     if (typeof exports !== 'undefined') {
         if (typeof module !== 'undefined' && module.exports) {
-            exports = module.exports = XLSXReader;
+            var exports = module.exports = XLSXReader;
         }
         exports.XLSXReader = XLSXReader;
     } else {
         root.XLSXReader = XLSXReader;
     }
 
-    // Current version.
-    XLSXReader.VERSION = '0.0.1';
+    function fixdata(data) {
+        var o = "", l = 0, w = 10240;
+        for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+        o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+        return o;
+    }
+
+    // IE >= 10 compat
+    var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" &&
+        typeof FileReader.prototype.readAsBinaryString !== "undefined";
 
     XLSXReader.utils = {
         'intializeFromFile': function(obj, file, readCells, toJSON, handler) {
@@ -50,15 +58,25 @@
 
             reader.onload = function(e) {
                 var data = e.target.result;
-                var workbook = XLSX.read(data, {
-                    type: 'binary'
-                });
+                var workbook;
+                if(rABS) {
+                    workbook = XLSX.read(data, {
+                        type: 'binary'
+                    });
+                } else {
+                    var arr = fixdata(data);
+                    workbook = XLSX.read(btoa(arr), {type: 'base64'});
+                }
 
                 obj.sheets = XLSXReader.utils.parseWorkbook(workbook, readCells, toJSON);
                 handler(obj);
+            };
+            if(rABS) {
+                reader.readAsBinaryString(file);
+            } else {
+                reader.readAsArrayBuffer(file);
             }
 
-            reader.readAsBinaryString(file);
         },
         'parseWorkbook': function(workbook, readCells, toJSON) {
             if (toJSON === true) {
@@ -66,9 +84,6 @@
             }
 
             var sheets = {};
-
-            console.log(workbook);
-
             window.workbook = workbook;
 
             _.forEachRight(workbook.SheetNames, function(sheetName) {
