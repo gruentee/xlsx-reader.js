@@ -126,7 +126,7 @@
         to_json: function(workbook) {
             var result = {};
             workbook.SheetNames.forEach(function(sheetName) {
-                var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName], { raw: true });
                 if (roa.length > 0) {
                     result[sheetName] = roa;
                 }
