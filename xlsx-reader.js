@@ -71,6 +71,27 @@
                 obj.sheets = XLSXReader.utils.parseWorkbook(workbook, readCells, toJSON);
                 handler(obj);
             };
+
+            reader.onerror = function(e) {
+                e = e || window.event; // get window.event if e argument missing (in IE)
+                var msg;
+                switch (e.target.error.code) {
+                    case e.target.error.NOT_FOUND_ERR:
+                        msg = 'Datei nicht gefunden!';
+                        break;
+                    case e.target.error.NOT_READABLE_ERR:
+                        msg = 'Datei nicht lesbar!';
+                        break;
+                    case e.target.error.ABORT_ERR:
+                        msg = 'Lesevorgang wurde abgebrochen!';
+                        break;
+                    case e.target.error.SECURITY_ERR:
+                        msg = 'Datei wird von einem anderen Programm verwendet!';
+                        break;
+                }
+                handler(msg);
+            };
+
             if(rABS) {
                 reader.readAsBinaryString(file);
             } else {
