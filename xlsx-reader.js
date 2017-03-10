@@ -131,7 +131,9 @@
                             'r': row
                         });
                         var cell = sheet[cellIndex];
-                        rowData[column] = cell ? cell.v.trim() : undefined;
+                        if(cell.t === 's') cell.v = cell.v.trim();
+                        if(cell.w) cell.w = cell.w.trim();
+                        rowData[column] = cell ? cell.v : undefined;
                     });
                     sheetData[row] = rowData;
                 });
