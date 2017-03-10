@@ -131,7 +131,7 @@
                             'r': row
                         });
                         var cell = sheet[cellIndex];
-                        rowData[column] = cell ? cell.v : undefined;
+                        rowData[column] = cell ? cell.v.trim() : undefined;
                     });
                     sheetData[row] = rowData;
                 });
@@ -142,7 +142,7 @@
                 'name': sheet.name,
                 'col_size': range.e.c + 1,
                 'row_size': range.e.r + 1
-            }
+            };
         },
         to_json: function(workbook) {
             var result = {};
