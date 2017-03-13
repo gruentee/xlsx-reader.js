@@ -22,9 +22,9 @@
 
 
     // Create a safe reference to the XLSXReader object for use below.
-    var XLSXReader = function(file, readCells, toJSON, handler) {
+    var XLSXReader = function(file, readCells, toJSON, opts, handler) {
         var obj = {};
-        XLSXReader.utils.intializeFromFile(obj, file, readCells, toJSON, handler);
+        XLSXReader.utils.intializeFromFile(obj, file, readCells, toJSON, opts, handler);
         return obj;
     }
 
@@ -53,7 +53,7 @@
         typeof FileReader.prototype.readAsBinaryString !== "undefined";
 
     XLSXReader.utils = {
-        'intializeFromFile': function(obj, file, readCells, toJSON, handler) {
+        'intializeFromFile': function(obj, file, readCells, toJSON, opts, handler) {
             var reader = new FileReader();
 
             reader.onload = function(e) {
@@ -68,7 +68,7 @@
                     workbook = XLSX.read(btoa(arr), {type: 'base64'});
                 }
 
-                obj.sheets = XLSXReader.utils.parseWorkbook(workbook, readCells, toJSON);
+                obj.sheets = XLSXReader.utils.parseWorkbook(workbook, readCells, toJSON, opts);
                 handler(obj);
             };
 
@@ -99,9 +99,9 @@
             }
 
         },
-        'parseWorkbook': function(workbook, readCells, toJSON) {
+        'parseWorkbook': function(workbook, readCells, toJSON, opts) {
             if (toJSON === true) {
-                return XLSXReader.utils.to_json(workbook);
+                return XLSXReader.utils.to_json(workbook, opts);
             }
 
             var sheets = {};
@@ -132,7 +132,7 @@
                         });
                         var cell = sheet[cellIndex];
                         if(cell.t === 's') cell.v = cell.v.trim();
-                        if(cell.w) cell.w = cell.w.trim();
+                        // if(cell.w) cell.w = cell.w.trim();
                         rowData[column] = cell ? cell.v : undefined;
                     });
                     sheetData[row] = rowData;
@@ -146,15 +146,15 @@
                 'row_size': range.e.r + 1
             };
         },
-        to_json: function(workbook) {
+        to_json: function(workbook, opts) {
             var result = {};
             workbook.SheetNames.forEach(function(sheetName) {
-                var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName], { raw: true });
+                var roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], opts);
                 if (roa.length > 0) {
                     result[sheetName] = roa;
                 }
             });
             return result;
         }
-    }
+    };
 }).call(this);
